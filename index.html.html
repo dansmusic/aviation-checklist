@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Aviation Checklist Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            color: #fff;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .container {
+            max-width: 1024px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #a0a0a0;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .checklist-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .checklist-selector select {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 20px;
+            font-size: 1.1em;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .checklist-selector select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn {
+            padding: 15px 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: #fff;
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 25px rgba(0, 212, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .checklist-display {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .checklist-item {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 25px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            border-left: 5px solid #555;
+            font-size: 1.3em;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .checklist-item.active {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(0, 153, 204, 0.2) 100%);
+            border-left-color: #00d4ff;
+            box-shadow: 0 5px 30px rgba(0, 212, 255, 0.3);
+            transform: scale(1.02);
+        }
+
+        .checklist-item.completed {
+            background: rgba(0, 255, 136, 0.1);
+            border-left-color: #00ff88;
+            opacity: 0.7;
+        }
+
+        .item-text {
+            flex: 1;
+        }
+
+        .item-status {
+            font-size: 1.5em;
+            margin-left: 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .voice-status {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .voice-status.listening {
+            background: rgba(0, 212, 255, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .modal-content h2 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #00d4ff;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
+            color: #fff;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .help-text {
+            font-size: 0.9em;
+            color: #a0a0a0;
+            margin-top: 5px;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            height: 8px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #00d4ff 0%, #00ff88 100%);
+            height: 100%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8em; }
+            .checklist-item { font-size: 1.1em; padding: 20px; }
+            .btn { padding: 12px 20px; font-size: 1em; }
+        }
+
+        .order-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #00d4ff;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .order-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        .order-item.dragging {
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }
+
+        .order-item.drag-over {
+            border-top: 3px solid #00ff88;
+        }
+
+        .drag-handle {
+            font-size: 1.3em;
+            color: #00d4ff;
+        }
+
+        .order-item-name {
+            flex: 1;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✈️ Aviation Checklist Pro</h1>
+            <div class="subtitle">Professional Flight Checklist System</div>
+        </header>
+
+        <div class="main-content">
+            <div class="checklist-selector">
+                <select id="checklistSelect">
+                    <option value="">Select Checklist</option>
+                </select>
+                <button class="btn btn-secondary" onclick="showEditModal()">Manage Checklists</button>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="voice-status" id="voiceStatus">
+                Voice commands optional - Use button to advance through checklist
+            </div>
+
+            <div class="checklist-display" id="checklistDisplay">
+                <div style="text-align: center; color: #a0a0a0; padding: 50px;">
+                    <p style="font-size: 1.3em;">Select a checklist to begin</p>
+                    <p style="margin-top: 10px;">Or create a new one using "Manage Checklists"</p>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-secondary" id="micBtn" onclick="enableMicrophone()" style="display: none;">
+                    🎤 Enable Microphone
+                </button>
+                <button class="btn btn-primary" id="startBtn" onclick="startChecklist()" disabled>
+                    Start Checklist
+                </button>
+                <button class="btn btn-primary" id="nextBtn" onclick="nextItem()" style="display: none;">
+                    ✓ Check / Next
+                </button>
+                <button class="btn btn-secondary" id="resetBtn" onclick="resetChecklist()" style="display: none;">
+                    Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h2>Manage Checklists</h2>
+            
+            <div class="form-group">
+                <label>Reorder Checklists (Drag to Reorder)</label>
+                <div id="checklistOrderList" style="margin-top: 10px;">
+                    <!-- Will be populated dynamically -->
+                </div>
+                <div class="help-text">Drag and drop to change the order in the dropdown</div>
+            </div>
+
+            <hr style="border: 1px solid rgba(255,255,255,0.1); margin: 30px 0;">
+
+            <h3 style="color: #00d4ff; margin-bottom: 15px;">Edit Checklist</h3>
+            
+            <div class="form-group">
+                <label>Checklist Name</label>
+                <input type="text" id="checklistName" placeholder="e.g., Pre-Flight Checklist">
+            </div>
+
+            <div class="form-group">
+                <label>Checklist Items</label>
+                <textarea id="checklistItems" placeholder="Enter each checklist item on a new line:
+Fuel Quantity - CHECK
+Oil Pressure - CHECK
+Landing Gear - DOWN AND LOCKED
+Flaps - SET FOR TAKEOFF"></textarea>
+                <div class="help-text">Enter one item per line</div>
+            </div>
+
+            <div style="display: flex; gap: 15px; margin-top: 30px; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="saveChecklist()">Save Checklist</button>
+                <button class="btn btn-secondary" onclick="deleteChecklist()">Delete Current</button>
+                <button class="btn btn-secondary" onclick="closeEditModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let checklists = {};
+        let currentChecklist = null;
+        let currentIndex = 0;
+        let recognition = null;
+        let synth = window.speechSynthesis;
+        let selectedVoice = null;
+        let microphoneEnabled = false;
+        let checklistOrder = []; // Array to track display order
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Test if localStorage is available
+            try {
+                const test = '__storage_test__';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+            } catch (e) {
+                alert('Warning: Storage is disabled. Checklists will not be saved. Please disable private browsing mode.');
+            }
+            
+            loadChecklists();
+            initVoiceRecognition();
+            initTextToSpeech();
+            populateChecklistSelector();
+            
+            // Show microphone button if speech recognition is available
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                document.getElementById('micBtn').style.display = 'inline-block';
+            } else {
+                document.getElementById('voiceStatus').textContent = 'Voice commands not supported on this device. Use button to advance.';
+            }
+        });
+
+        // Load checklists from localStorage
+        function loadChecklists() {
+            const saved = localStorage.getItem('aviationChecklists');
+            const savedOrder = localStorage.getItem('aviationChecklistOrder');
+            
+            if (saved) {
+                checklists = JSON.parse(saved);
+            } else {
+                // Default checklists
+                checklists = {
+                    'pre-flight': {
+                        name: 'Pre-Flight Inspection',
+                        items: [
+                            'Aircraft Documents - VERIFY',
+                            'Fuel Quantity - CHECK',
+                            'Oil Level - CHECK',
+                            'Control Surfaces - FREE AND CORRECT',
+                            'Landing Gear - INSPECT',
+                            'Tires - CHECK CONDITION',
+                            'Pitot Tube - UNCOVERED AND CLEAR',
+                            'Fuel Drain - CHECK FOR CONTAMINATION'
+                        ]
+                    },
+                    'before-start': {
+                        name: 'Before Engine Start',
+                        items: [
+                            'Parking Brake - SET',
+                            'Fuel Selector - BOTH',
+                            'Avionics Master - OFF',
+                            'Battery Master - ON',
+                            'Fuel Pump - ON',
+                            'Mixture - RICH',
+                            'Carburetor Heat - COLD',
+                            'Throttle - 1/4 INCH OPEN'
+                        ]
+                    },
+                    'before-takeoff': {
+                        name: 'Before Takeoff',
+                        items: [
+                            'Cabin Doors - CLOSED AND LOCKED',
+                            'Flight Controls - FREE AND CORRECT',
+                            'Instruments - CHECK AND SET',
+                            'Fuel Selector - PROPER TANK',
+                            'Mixture - SET',
+                            'Trim - SET FOR TAKEOFF',
+                            'Flaps - SET FOR TAKEOFF',
+                            'Lights - AS REQUIRED'
+                        ]
+                    }
+                };
+                saveChecklists();
+            }
+            
+            if (savedOrder) {
+                checklistOrder = JSON.parse(savedOrder);
+            } else {
+                // Default order
+                checklistOrder = Object.keys(checklists);
+                saveChecklistOrder();
+            }
+        }
+
+        function saveChecklists() {
+            try {
+                localStorage.setItem('aviationChecklists', JSON.stringify(checklists));
+                console.log('Checklists saved successfully:', Object.keys(checklists));
+                return true;
+            } catch (e) {
+                console.error('Failed to save checklists:', e);
+                alert('Failed to save checklist. Your browser may have storage disabled or be in private mode.');
+                return false;
+            }
+        }
+
+        function saveChecklistOrder() {
+            try {
+                localStorage.setItem('aviationChecklistOrder', JSON.stringify(checklistOrder));
+                return true;
+            } catch (e) {
+                console.error('Failed to save order:', e);
+                return false;
+            }
+        }
+
+        function populateChecklistSelector() {
+            const select = document.getElementById('checklistSelect');
+            select.innerHTML = '<option value="">Select Checklist</option>';
+            
+            // Add any new checklists to the order array
+            const allKeys = Object.keys(checklists);
+            allKeys.forEach(key => {
+                if (!checklistOrder.includes(key)) {
+                    checklistOrder.push(key);
+                }
+            });
+            
+            // Remove deleted checklists from order
+            checklistOrder = checklistOrder.filter(key => checklists[key]);
+            saveChecklistOrder();
+            
+            // Populate in the saved order
+            checklistOrder.forEach(key => {
+                if (checklists[key]) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = checklists[key].name;
+                    select.appendChild(option);
+                }
+            });
+
+            select.onchange = () => {
+                const key = select.value;
+                if (key) {
+                    currentChecklist = checklists[key];
+                    displayChecklist();
+                    document.getElementById('startBtn').disabled = false;
+                }
+            };
+        }
+
+        function displayChecklist() {
+            const display = document.getElementById('checklistDisplay');
+            display.innerHTML = '';
+
+            currentChecklist.items.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'checklist-item';
+                div.id = `item-${index}`;
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'item-text';
+                textSpan.textContent = item;
+                
+                const statusSpan = document.createElement('span');
+                statusSpan.className = 'item-status';
+                statusSpan.textContent = '';
+                
+                div.appendChild(textSpan);
+                div.appendChild(statusSpan);
+                display.appendChild(div);
+            });
+
+            currentIndex = 0;
+            updateProgress();
+        }
+
+        function startChecklist() {
+            currentIndex = 0;
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            document.getElementById('resetBtn').style.display = 'inline-block';
+            
+            highlightCurrentItem();
+            
+            // Speak the first item
+            if (currentChecklist && currentChecklist.items[currentIndex]) {
+                speak(currentChecklist.items[currentIndex]);
+            }
+            
+            // Request microphone permission and start listening
+            requestMicrophoneAndListen();
+        }
+
+        function nextItem() {
+            if (!currentChecklist || currentIndex >= currentChecklist.items.length) return;
+
+            // Mark current as complete
+            const currentItem = document.getElementById(`item-${currentIndex}`);
+            currentItem.classList.add('completed');
+            currentItem.classList.remove('active');
+            currentItem.querySelector('.item-status').textContent = '✓';
+
+            currentIndex++;
+            updateProgress();
+
+            if (currentIndex < currentChecklist.items.length) {
+                highlightCurrentItem();
+                // Speak the next item
+                speak(currentChecklist.items[currentIndex]);
+            } else {
+                finishChecklist();
+            }
+        }
+
+        function highlightCurrentItem() {
+            // Remove all active classes
+            document.querySelectorAll('.checklist-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Highlight current
+            const currentItem = document.getElementById(`item-${currentIndex}`);
+            if (currentItem) {
+                currentItem.classList.add('active');
+                currentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function finishChecklist() {
+            document.getElementById('voiceStatus').textContent = '✓ Checklist Complete!';
+            document.getElementById('voiceStatus').style.background = 'rgba(0, 255, 136, 0.2)';
+            document.getElementById('nextBtn').style.display = 'none';
+            speak('Checklist complete');
+            stopListening();
+        }
+
+        function resetChecklist() {
+            currentIndex = 0;
+            speechSynthesis.cancel(); // Stop any ongoing speech
+            
+            document.querySelectorAll('.checklist-item').forEach(item => {
+                item.classList.remove('active', 'completed');
+                item.querySelector('.item-status').textContent = '';
+            });
+            
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'none';
+            
+            if (microphoneEnabled) {
+                document.getElementById('voiceStatus').textContent = '✓ Microphone ready! Start checklist to use voice.';
+                document.getElementById('voiceStatus').style.background = 'rgba(0, 255, 136, 0.2)';
+            } else {
+                document.getElementById('voiceStatus').textContent = 'Voice commands optional - Use button to advance through checklist';
+                document.getElementById('voiceStatus').style.background = 'rgba(255, 255, 255, 0.05)';
+            }
+            
+            updateProgress();
+            stopListening();
+        }
+
+        function updateProgress() {
+            if (!currentChecklist) return;
+            const percent = (currentIndex / currentChecklist.items.length) * 100;
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        // Text-to-Speech
+        function initTextToSpeech() {
+            // Wait for voices to load
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = selectBritishVoice;
+            }
+            selectBritishVoice();
+        }
+
+        function selectBritishVoice() {
+            const voices = speechSynthesis.getVoices();
+            
+            console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
+            
+            // Priority 1: Premium British English voices (neural/enhanced)
+            const premiumVoices = [
+                'Microsoft Libby Online (Natural) - English (United Kingdom)',
+                'Microsoft Sonia Online (Natural) - English (United Kingdom)', 
+                'Microsoft Emily Online (Natural) - English (United Kingdom)',
+                'Google UK English Female',
+                'Microsoft Hazel Desktop - English (United Kingdom)',
+                'Samantha (Enhanced)',
+                'Serena (Premium)'
+            ];
+
+            // Try premium voices first
+            for (const voiceName of premiumVoices) {
+                selectedVoice = voices.find(voice => voice.name === voiceName);
+                if (selectedVoice) {
+                    console.log('Selected premium voice:', selectedVoice.name);
+                    return;
+                }
+            }
+
+            // Priority 2: Any GB female voice with "enhanced", "premium", or "natural"
+            selectedVoice = voices.find(voice => 
+                voice.lang.includes('en-GB') && 
+                (voice.name.toLowerCase().includes('female') ||
+                 voice.name.toLowerCase().includes('natural') ||
+                 voice.name.toLowerCase().includes('enhanced') ||
+                 voice.name.toLowerCase().includes('premium'))
+            );
+
+            if (selectedVoice) {
+                console.log('Selected enhanced GB voice:', selectedVoice.name);
+                return;
+            }
+
+            // Priority 3: Standard GB voices
+            const standardGBVoices = ['Kate', 'Serena', 'Karen', 'Daniel', 'Moira'];
+            for (const voiceName of standardGBVoices) {
+                selectedVoice = voices.find(voice => voice.name === voiceName);
+                if (selectedVoice) {
+                    console.log('Selected standard voice:', selectedVoice.name);
+                    return;
+                }
+            }
+
+            // Priority 4: Any GB voice
+            selectedVoice = voices.find(voice => voice.lang.includes('en-GB'));
+
+            if (selectedVoice) {
+                console.log('Selected GB voice:', selectedVoice.name);
+                return;
+            }
+
+            // Priority 5: High quality US/AU English female voices
+            const fallbackVoices = ['Samantha', 'Ava (Enhanced)', 'Karen', 'Victoria'];
+            for (const voiceName of fallbackVoices) {
+                selectedVoice = voices.find(voice => voice.name === voiceName);
+                if (selectedVoice) {
+                    console.log('Selected fallback voice:', selectedVoice.name);
+                    return;
+                }
+            }
+
+            // Priority 6: Any English female voice
+            selectedVoice = voices.find(voice => 
+                voice.lang.includes('en') && 
+                (voice.name.toLowerCase().includes('female') ||
+                 voice.name.toLowerCase().includes('woman'))
+            );
+
+            if (!selectedVoice && voices.length > 0) {
+                selectedVoice = voices.find(voice => voice.lang.includes('en')) || voices[0];
+            }
+
+            console.log('Final selected voice:', selectedVoice?.name || 'default');
+        }
+
+        function speak(text) {
+            // Cancel any ongoing speech
+            speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            }
+            
+            // Set to British English
+            utterance.lang = 'en-GB';
+            utterance.rate = 0.9; // Slightly slower for clarity
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+
+            speechSynthesis.speak(utterance);
+        }
+
+        // Voice Recognition
+        function enableMicrophone() {
+            if (!recognition) {
+                document.getElementById('voiceStatus').textContent = 'Voice recognition not available on this device.';
+                return;
+            }
+
+            document.getElementById('voiceStatus').textContent = '🎤 Testing microphone...';
+            document.getElementById('voiceStatus').style.background = 'rgba(255, 165, 0, 0.2)';
+            document.getElementById('micBtn').disabled = true;
+
+            // Reset the recognition object to clear any previous state
+            initVoiceRecognition();
+
+            // Start recognition to trigger permission prompt
+            setTimeout(() => {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.log('Error starting recognition:', e);
+                    if (e.name === 'InvalidStateError') {
+                        // Already running
+                        microphoneEnabled = true;
+                        document.getElementById('voiceStatus').textContent = '✓ Microphone working! Say "check" to advance.';
+                        document.getElementById('voiceStatus').style.background = 'rgba(0, 255, 136, 0.2)';
+                        document.getElementById('micBtn').textContent = '✓ Microphone Working';
+                    } else {
+                        document.getElementById('voiceStatus').textContent = 'Could not start microphone. Use button to advance.';
+                        document.getElementById('voiceStatus').style.background = 'rgba(255, 0, 0, 0.2)';
+                        document.getElementById('micBtn').disabled = false;
+                    }
+                }
+            }, 100);
+        }
+
+        function initVoiceRecognition() {
+            const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+            
+            if (SpeechRecognition) {
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    console.log('Speech recognition started successfully');
+                    microphoneEnabled = true;
+                    document.getElementById('voiceStatus').classList.add('listening');
+                    document.getElementById('voiceStatus').style.background = 'rgba(0, 255, 136, 0.2)';
+                    document.getElementById('micBtn').textContent = '✓ Microphone Working';
+                    document.getElementById('micBtn').disabled = true;
+                    
+                    // Stop it for now if we're just testing, will restart when checklist starts
+                    if (currentIndex === 0 || !currentChecklist) {
+                        document.getElementById('voiceStatus').textContent = '✓ Microphone working! Start checklist to use voice.';
+                        setTimeout(() => {
+                            try {
+                                recognition.stop();
+                                document.getElementById('voiceStatus').classList.remove('listening');
+                                document.getElementById('voiceStatus').textContent = '✓ Microphone ready! Start checklist to use voice.';
+                            } catch (e) {
+                                console.log('Error stopping recognition:', e);
+                            }
+                        }, 500);
+                    } else {
+                        document.getElementById('voiceStatus').textContent = '🎤 Listening... Say "CHECK" or "NEXT"';
+                    }
+                };
+
+                recognition.onresult = (event) => {
+                    const last = event.results.length - 1;
+                    const text = event.results[last][0].transcript.toLowerCase().trim();
+                    
+                    console.log('Heard:', text);
+                    
+                    // Show what was heard in the status
+                    document.getElementById('voiceStatus').textContent = '🎤 Heard: "' + text + '"';
+                    
+                    // Check for various forms of the command
+                    if (text.includes('check') || 
+                        text.includes('checked') || 
+                        text.includes('next') ||
+                        text.includes('neck') ||  // Common misheard word
+                        text.includes('tech') ||  // Common misheard word
+                        text === 'check' ||
+                        text === 'next') {
+                        
+                        // Visual feedback
+                        document.getElementById('voiceStatus').style.background = 'rgba(0, 255, 136, 0.5)';
+                        setTimeout(() => {
+                            document.getElementById('voiceStatus').style.background = 'rgba(0, 212, 255, 0.2)';
+                        }, 300);
+                        
+                        nextItem();
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    console.log('Speech recognition error:', event.error, event);
+                    
+                    // Different handling based on error type
+                    if (event.error === 'not-allowed') {
+                        microphoneEnabled = false;
+                        document.getElementById('voiceStatus').innerHTML = '⚠️ Microphone Blocked<br><small>Settings → Safari → Microphone → Allow, then refresh page</small>';
+                        document.getElementById('voiceStatus').style.background = 'rgba(255, 0, 0, 0.2)';
+                        document.getElementById('micBtn').textContent = '🎤 Try Again';
+                        document.getElementById('micBtn').disabled = false;
+                    } else if (event.error === 'no-speech') {
+                        // This is normal, just restart - don't show error
+                        console.log('No speech detected, continuing...');
+                        // Keep the listening message
+                        if (currentIndex > 0 && currentIndex < currentChecklist?.items.length) {
+                            document.getElementById('voiceStatus').textContent = '🎤 Listening... Say "CHECK" or "NEXT"';
+                        }
+                    } else if (event.error === 'aborted') {
+                        console.log('Recognition aborted - this is usually OK');
+                    } else if (event.error === 'network') {
+                        console.log('Network error - speech recognition requires internet');
+                        // Don't disable microphone, just inform
+                        document.getElementById('voiceStatus').innerHTML = '⚠️ Internet required for voice<br><small>Check connection or use button</small>';
+                        document.getElementById('voiceStatus').style.background = 'rgba(255, 165, 0, 0.2)';
+                        // Try to restart after a delay in case connection recovers
+                        if (microphoneEnabled && currentIndex > 0 && currentIndex < currentChecklist?.items.length) {
+                            setTimeout(() => {
+                                try {
+                                    recognition.start();
+                                } catch (e) {
+                                    console.log('Could not restart after network error:', e);
+                                }
+                            }, 2000);
+                        }
+                    } else if (event.error === 'service-not-allowed') {
+                        microphoneEnabled = false;
+                        document.getElementById('voiceStatus').innerHTML = '⚠️ Voice service unavailable<br><small>Use button to advance</small>';
+                        document.getElementById('voiceStatus').style.background = 'rgba(255, 0, 0, 0.2)';
+                    } else {
+                        console.log('Other recognition error:', event.error);
+                        document.getElementById('voiceStatus').innerHTML = '⚠️ Voice unavailable<br><small>Use button to advance</small>';
+                        document.getElementById('voiceStatus').style.background = 'rgba(255, 165, 0, 0.2)';
+                    }
+                };
+
+                recognition.onend = () => {
+                    console.log('Recognition ended, micEnabled:', microphoneEnabled, 'index:', currentIndex);
+                    // Automatically restart if we're in the middle of a checklist and mic was enabled
+                    if (microphoneEnabled && currentIndex > 0 && currentIndex < currentChecklist?.items.length) {
+                        try {
+                            setTimeout(() => {
+                                console.log('Restarting recognition...');
+                                recognition.start();
+                            }, 300);
+                        } catch (e) {
+                            console.log('Could not restart recognition:', e);
+                        }
+                    }
+                };
+            } else {
+                console.log('Speech recognition not supported');
+            }
+        }
+
+        function requestMicrophoneAndListen() {
+            if (!recognition) return;
+            if (!microphoneEnabled) {
+                document.getElementById('voiceStatus').textContent = 'Click "Enable Microphone" to use voice commands';
+                return;
+            }
+
+            try {
+                recognition.start();
+                document.getElementById('voiceStatus').textContent = '🎤 Listening... Say "CHECK" or "NEXT"';
+                document.getElementById('voiceStatus').classList.add('listening');
+            } catch (e) {
+                console.log('Recognition start error:', e);
+                if (e.name === 'InvalidStateError') {
+                    // Already running, that's fine
+                    document.getElementById('voiceStatus').textContent = '🎤 Listening... Say "CHECK" or "NEXT"';
+                }
+            }
+        }
+
+        function startListening() {
+            if (recognition && microphoneEnabled) {
+                try {
+                    recognition.start();
+                    document.getElementById('voiceStatus').textContent = '🎤 Listening... Say "CHECK" or "NEXT"';
+                    document.getElementById('voiceStatus').classList.add('listening');
+                } catch (e) {
+                    console.log('Recognition already started or error:', e);
+                }
+            }
+        }
+
+        function stopListening() {
+            if (recognition) {
+                try {
+                    recognition.stop();
+                    document.getElementById('voiceStatus').classList.remove('listening');
+                } catch (e) {
+                    console.log('Recognition not running');
+                }
+            }
+        }
+
+        // Modal functions
+        function showEditModal() {
+            const modal = document.getElementById('editModal');
+            modal.classList.add('active');
+            
+            // Populate the reorder list
+            populateOrderList();
+            
+            // Load current checklist if one is selected
+            const select = document.getElementById('checklistSelect');
+            if (select.value && checklists[select.value]) {
+                const checklist = checklists[select.value];
+                document.getElementById('checklistName').value = checklist.name;
+                document.getElementById('checklistItems').value = checklist.items.join('\n');
+            } else {
+                document.getElementById('checklistName').value = '';
+                document.getElementById('checklistItems').value = '';
+            }
+        }
+
+        function populateOrderList() {
+            const orderList = document.getElementById('checklistOrderList');
+            orderList.innerHTML = '';
+            
+            checklistOrder.forEach((key, index) => {
+                if (checklists[key]) {
+                    const item = document.createElement('div');
+                    item.className = 'order-item';
+                    item.draggable = true;
+                    item.dataset.key = key;
+                    item.innerHTML = `
+                        <span class="drag-handle">☰</span>
+                        <span class="order-item-name">${checklists[key].name}</span>
+                    `;
+                    
+                    // Drag and drop handlers
+                    item.addEventListener('dragstart', handleDragStart);
+                    item.addEventListener('dragend', handleDragEnd);
+                    item.addEventListener('dragover', handleDragOver);
+                    item.addEventListener('drop', handleDrop);
+                    item.addEventListener('dragenter', handleDragEnter);
+                    item.addEventListener('dragleave', handleDragLeave);
+                    
+                    // Also allow clicking to edit
+                    item.addEventListener('click', (e) => {
+                        if (!e.target.classList.contains('drag-handle')) {
+                            document.getElementById('checklistSelect').value = key;
+                            const checklist = checklists[key];
+                            document.getElementById('checklistName').value = checklist.name;
+                            document.getElementById('checklistItems').value = checklist.items.join('\n');
+                        }
+                    });
+                    
+                    orderList.appendChild(item);
+                }
+            });
+        }
+
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.order-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            if (this !== draggedElement) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            if (draggedElement !== this) {
+                const draggedKey = draggedElement.dataset.key;
+                const targetKey = this.dataset.key;
+                
+                const draggedIndex = checklistOrder.indexOf(draggedKey);
+                const targetIndex = checklistOrder.indexOf(targetKey);
+                
+                // Remove from old position and insert at new position
+                checklistOrder.splice(draggedIndex, 1);
+                const newTargetIndex = checklistOrder.indexOf(targetKey);
+                checklistOrder.splice(newTargetIndex, 0, draggedKey);
+                
+                saveChecklistOrder();
+                populateOrderList();
+                populateChecklistSelector();
+            }
+            
+            return false;
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function saveChecklist() {
+            const name = document.getElementById('checklistName').value.trim();
+            const itemsText = document.getElementById('checklistItems').value.trim();
+            
+            if (!name || !itemsText) {
+                alert('Please enter a name and at least one item');
+                return;
+            }
+
+            const items = itemsText.split('\n').filter(item => item.trim());
+            
+            if (items.length === 0) {
+                alert('Please enter at least one checklist item');
+                return;
+            }
+            
+            const key = name.toLowerCase().replace(/\s+/g, '-');
+            const isNew = !checklists[key];
+            
+            checklists[key] = { name, items };
+            
+            // Add to order if it's a new checklist
+            if (isNew && !checklistOrder.includes(key)) {
+                checklistOrder.push(key);
+                saveChecklistOrder();
+            }
+            
+            if (saveChecklists()) {
+                // Show success message
+                const statusDiv = document.createElement('div');
+                statusDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: rgba(0, 255, 136, 0.9); color: #000; padding: 20px 30px; border-radius: 10px; font-weight: bold; z-index: 10000; animation: slideIn 0.3s;';
+                statusDiv.textContent = '✓ Checklist Saved!';
+                document.body.appendChild(statusDiv);
+                
+                setTimeout(() => {
+                    statusDiv.remove();
+                }, 2000);
+                
+                populateChecklistSelector();
+                populateOrderList(); // Refresh the order list
+                
+                // Auto-select the new/edited checklist
+                document.getElementById('checklistSelect').value = key;
+                currentChecklist = checklists[key];
+                displayChecklist();
+                document.getElementById('startBtn').disabled = false;
+            }
+        }
+
+        function deleteChecklist() {
+            const select = document.getElementById('checklistSelect');
+            if (!select.value) {
+                alert('Please select a checklist to delete');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to delete this checklist?')) {
+                const keyToDelete = select.value;
+                delete checklists[keyToDelete];
+                
+                // Remove from order
+                checklistOrder = checklistOrder.filter(key => key !== keyToDelete);
+                
+                saveChecklists();
+                saveChecklistOrder();
+                populateChecklistSelector();
+                populateOrderList();
+                
+                document.getElementById('checklistDisplay').innerHTML = '<div style="text-align: center; color: #a0a0a0; padding: 50px;"><p style="font-size: 1.3em;">Select a checklist to begin</p></div>';
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('checklistName').value = '';
+                document.getElementById('checklistItems').value = '';
+            }
+        }
+    </script>
+</body>
+</html>
